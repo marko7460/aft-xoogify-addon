@@ -42,7 +42,7 @@ data "aws_iam_policy_document" "xoogify_oidc" {
       content {
         test     = "StringEquals"
         variable = "${aws_iam_openid_connect_provider.xoogify.url}:organization"
-        values   = [toset(var.xoogify_organizations)]
+        values   = toset(var.xoogify_organizations)
       }
     }
 
@@ -50,8 +50,8 @@ data "aws_iam_policy_document" "xoogify_oidc" {
       for_each = length(toset(var.xoogify_uids)) > 0 ? [1] : []
       content {
         test     = "StringEquals"
-        variable = "${aws_iam_openid_connect_provider.xoogify.url}:uid"
-        values   = [toset(var.xoogify_uids)]
+        variable = "${aws_iam_openid_connect_provider.xoogify.url}:sub"
+        values   = toset(var.xoogify_uids)
       }
     }
 
@@ -60,7 +60,7 @@ data "aws_iam_policy_document" "xoogify_oidc" {
       content {
         test     = "StringEquals"
         variable = "${aws_iam_openid_connect_provider.xoogify.url}:architecture"
-        values   = [toset(var.xoogify_architectures)]
+        values   = toset(var.xoogify_architectures)
       }
     }
   }
