@@ -4,11 +4,10 @@ resource "aws_servicecatalog_principal_portfolio_association" "example" {
   principal_type = "IAM"
 }
 
-data "google_client_config" "current" {}
-
 resource "aws_iam_openid_connect_provider" "xoogify" {
-  url             = "https://securetoken.google.com/${data.google_client_config.current.project}"
-  client_id_list  = [data.google_client_config.current.project]
+  provider = aws.aft_management
+  url             = "https://securetoken.google.com/${var.project_id}"
+  client_id_list  = [var.project_id]
   thumbprint_list = [
     "6938fd4d98bab03faadb97b34396831e3780aea1",
     "1c58a3a8518e8759bf075b76b750d4f2df264fcd",
@@ -29,13 +28,13 @@ data "aws_iam_policy_document" "xoogify_oidc" {
 
     principals {
       type        = "Federated"
-      identifiers = ["${aws_iam_openid_connect_provider.xoogify.arn}/${aws_iam_openid_connect_provider.xoogify.url}"]
+      identifiers = ["arn:${data.aws_partition.current.partition}:iam::${var.aft_management_account_id}:oidc-provider/securetoken.google.com/${var.project_id}"]
     }
 
     condition {
       test     = "StringEquals"
       variable = "${aws_iam_openid_connect_provider.xoogify.url}:aud"
-      values   = ["${data.google_client_config.current.project}"]
+      values   = [var.project_id]
     }
 
     dynamic "condition" {
@@ -68,6 +67,7 @@ data "aws_iam_policy_document" "xoogify_oidc" {
 }
 
 resource "aws_iam_role" "xoogify_oidc" {
+  provider = aws.aft_management
   name        = var.xoogify_name
   path        = var.xoogify_path
   description = "Role that allows xoogify hyperautomation to use OIDC to authenticate users and assume AFT roles"
@@ -83,12 +83,14 @@ resource "aws_iam_role" "xoogify_oidc" {
 }
 
 resource "aws_iam_role_policy_attachment" "xoogify-oidc-policy-attachment" {
+  provider = aws.aft_management
   role       = aws_iam_role.xoogify_oidc.name
   policy_arn = aws_iam_policy.xoogify-policy.arn
 }
 
 data "aws_iam_policy_document" "xoogify-policy-definition" {
   statement {
+    sid       = "XoofigyAFTRoleAssume"
     effect    = "Allow"
     actions   = ["sts:AssumeRole"]
     resources = ["arn:aws:iam::*:role/AWSAFTAdmin"]
@@ -96,6 +98,7 @@ data "aws_iam_policy_document" "xoogify-policy-definition" {
 }
 
 resource "aws_iam_policy" "xoogify-policy" {
+  provider = aws.aft_management
   name        = "xoogify-aft-hyperautomation-policy"
   description = "Policy used by xoogify automation for admin access"
   policy      = data.aws_iam_policy_document.xoogify-policy-definition.json

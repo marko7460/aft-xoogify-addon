@@ -3,6 +3,10 @@ variable portfolio_id {
   description = "The ID of the portfolio to which to associate the principal."
 }
 
+variable "project_id" {
+  type = string
+}
+
 ################################################################################
 # GitHub OIDC Role
 ################################################################################
